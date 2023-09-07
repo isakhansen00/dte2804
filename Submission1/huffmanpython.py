@@ -1,3 +1,5 @@
+# https://narainsreehith.medium.com/huffman-coding-on-image-d6092bed5821
+
 import cv2
 import numpy as np
 from copy import deepcopy as cp
@@ -277,3 +279,12 @@ class Image:
 image = Image()
 image.huffmanCode("./sui.png", "./compressed.bin",
                   "./output.png", toCheck=1)
+
+"""
+Filstørrelsen til compressed.bin blir større enn det originale sui.png-bildet fordi Huffman-kodealgoritmen implementert i koden din ikke er laget for å redusere størrelsen på bildet. 
+Huffman-koding er en prefikskodingsalgoritme med variabel lengde som brukes for tapsfri datakomprimering, og effektiviteten avhenger av fordelingen av symboler (i dette tilfellet pikselintensiteter).
+I koden brukes Huffman-koding for å kode pikselintensiteten til bildet. Redundans eller mønstre i bildedataene blir ikke utnyttet, noe som er avgjørende for å oppnå komprimering. 
+Huffman-koding kan til og med øke størrelsen på dataene i noen tilfeller hvis symbolene har like sannsynligheter eller hvis det ikke er noen redundans å utnytte.
+For å oppnå faktisk bildekomprimering, vil du vanligvis bruke bildespesifikke komprimeringsalgoritmer som JPEG, PNG eller andre som er designet for å utnytte romlig redundans og andre egenskaper ved bilder. 
+Disse algoritmene bruker teknikker som diskret cosinustransformasjon (DCT), run-length-koding (RLE) og mer for å redusere filstørrelsen samtidig som den essensielle visuelle informasjonen til bildet bevares.
+"""
