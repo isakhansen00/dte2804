@@ -3,6 +3,8 @@
 import cv2
 import numpy as np
 from copy import deepcopy as cp
+from matplotlib import pyplot as plt
+import matplotlib.image as mpimg
 
 
 class Node:
@@ -252,13 +254,14 @@ class Image:
         self.huffmanAlgo()
         print('Coding Image completed\n')
         e = time.time()
+        encode_time = e-s
 
         print("\nOriginal Size of Image : ", self.r*self.c*self.d*8, " bits")
         print("\nCompressed Size : ", len(self.encodedString), " bits")
         print("\nCompressed factor : ", self.r *
               self.c*self.d*8/(len(self.encodedString)), "\n")
 
-        print("Took ", e-s, " sec to encode input image\n")
+        print("Took ", encode_time, " sec to encode input image\n")
         print('Sending coded data\n')
         self.sendBinaryData(compressed_pth)
         print('Soded data sent\n')
@@ -271,9 +274,95 @@ class Image:
         print('Completed decoding compressed image ( open output image from the above mentioned path) \n')
 
         e = time.time()
-        print("Took ", e-s, " sec to decode compressed image\n")
+        decode_time = e-s
+        print("Took ", decode_time, " sec to decode compressed image\n")
         if(toCheck):
             print("Are both images same : ", self.checkCoding())
+
+        org_size_of_image = self.r*self.c*self.d*8
+        comp_size_image = len(self.encodedString)
+        comp_factor = self.r * self.c*self.d*8/(len(self.encodedString))
+        
+
+        # Ploting same results over in pyplot for nicer view
+        # create figure
+        fig = plt.figure(figsize=(12, 9))
+        
+        # setting values to rows and column variables
+        rows = 2
+        columns = 2
+        
+        # reading images
+        org_img = mpimg.imread(input_pth)
+        decompressed_img = mpimg.imread(output_pth)
+        
+        # Adds a subplot at the 1st position
+        fig.add_subplot(rows, columns, 1)
+        
+        # showing original image
+        plt.imshow(org_img)
+        plt.axis('off')
+        plt.title("Original image", weight="bold")
+        
+        # Adds a subplot at the 2nd position
+        fig.add_subplot(rows, columns, 2)
+        
+        # showing decompressed image
+        plt.imshow(decompressed_img)
+        plt.axis('off')
+        plt.title("Decompressed image", weight="bold")
+
+        # showing size of original image in bits
+        fig.add_subplot(rows, columns, 3)
+        plt.axis('off')
+        plt.text(0.22, 0.9, 'Original Size of Image :', weight="bold", fontsize = 18)
+
+        fig.add_subplot(rows, columns, 4)
+        plt.axis('off')
+        plt.text(-0.1, 0.9, str(org_size_of_image) + " bits", fontsize = 18)
+
+        # showing compression size in bits
+        fig.add_subplot(rows, columns, 3)
+        plt.axis('off')
+        plt.text(0.22, 0.75, 'Compressed Size :', weight="bold", fontsize = 18)
+
+        fig.add_subplot(rows, columns, 4)
+        plt.axis('off')
+        plt.text(-0.1, 0.75, str(comp_size_image) + " bits", fontsize = 18)
+
+        # showing compression factor
+        fig.add_subplot(rows, columns, 3)
+        plt.axis('off')
+        plt.text(0.22, 0.6, 'Compressed factor :', weight="bold", fontsize = 18)
+
+        fig.add_subplot(rows, columns, 4)
+        plt.axis('off')
+        plt.text(-0.1, 0.6, str(comp_factor), fontsize = 18)
+
+        # showing time used for encoding image
+        fig.add_subplot(rows, columns, 3)
+        plt.axis('off')
+        plt.text(0.22, 0.45, 'Time encoding :', weight="bold", fontsize = 18)
+
+        fig.add_subplot(rows, columns, 4)
+        plt.axis('off')
+        plt.text(-0.1, 0.45, str(encode_time) + " seconds", fontsize = 18)
+
+        # showing time used for decoding image
+        fig.add_subplot(rows, columns, 3)
+        plt.axis('off')
+        plt.text(0.22, 0.3, 'Time decoding :', weight="bold", fontsize = 18)
+
+        fig.add_subplot(rows, columns, 4)
+        plt.axis('off')
+        plt.text(-0.1, 0.3, str(decode_time) + " seconds", fontsize = 18)
+
+        # showing time used for decoding image
+        fig.add_subplot(rows, columns, 3)
+        plt.axis('off')
+        plt.text(0.25, 2.4, 'Huffman encoding of image using Python', weight="bold", fontsize = 22)
+
+        plt.show()
 
 
 image = Image()
