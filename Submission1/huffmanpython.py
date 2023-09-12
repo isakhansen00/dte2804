@@ -6,17 +6,22 @@ from copy import deepcopy as cp
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
 
+"""
+The code aims to apply Huffman coding to compress an image by representing frequently occurring intensity values with shorter binary codes and less frequent values with longer codes. 
+The Image class provides methods for encoding and decoding the image using Huffman coding.
+This code defines two classes, Node and Image, for implementing the Huffman coding algorithm on an image.
+"""
 
+# This class represents a node in the Huffman coding tree.
 class Node:
     def __init__(self, f, p, isLeaf=0):
         self.freq = f          # For storing intensity
         self.prob = p          # For storing Probability
         self.word = ""         # For coded word ex : '100101'
-        # Pointers for children, C[0] for left child, c[1] for right child
-        self.c = [None, None]
+        self.c = [None, None]  # Pointers for children, C[0] for left child, c[1] for right child
         self.isLeaf = isLeaf   # Flag for Leaf-Nodes
 
-
+# This class represents an image and contains methods to perform Huffman coding and decoding on the image.
 class Image:
     def __init__(self):
         self.path_in = ""               # Input file Location
@@ -47,9 +52,11 @@ class Image:
         # Binary from file in for of integers ie [0,1,0,0,1,0,1,0,1,0,1,0,1,1,......]
         self.binaryFromFile = []
 
+    # Checks if the Huffman coding was successful by comparing the original image (im) and the decoded image (out).
     def checkCoding(self):
         return np.all(self.im == self.out)
 
+    # Reads an image from the specified path and stores it in the im attribute using OpenCV (cv2).
     def readImage(self, path):
         self.path_in = path
         try:
@@ -57,10 +64,11 @@ class Image:
         except:
             print("Error in reading image")
 
+    # Initializes the image data by flattening the image, adding its dimensions, and creating a histogram.
     def initialise(self):
         self.r, self.c, self.d = self.im.shape
 
-# Pushing r,c,d to encode into image_data list
+        # Pushing r,c,d to encode into image_data list
         temp_list = self.im.flatten()
         temp_list = np.append(temp_list, self.r)
         temp_list = np.append(temp_list, self.c)
@@ -68,20 +76,20 @@ class Image:
 
         self.image_data = temp_list
 
-# Creating historgram from image_data to create frequencies.
+        # Creating historgram from image_data to create frequencies.
         self.hist = np.bincount(
             self.image_data, minlength=max(256, self.r, self.c, self.d))
         total = np.sum(self.hist)
 
-# Extracting the non-zero frequencies
+        # Extracting the non-zero frequencies
         self.freqs = [i for i, e in enumerate(self.hist) if e != 0]
         self.freqs = np.array(self.freqs)
 
-# Creatn=ing a dict of propabilities , with keys are intensities and value as propabilities
+        # Creatn=ing a dict of propabilities , with keys are intensities and value as propabilities
         for i, e in enumerate(self.freqs):
             self.prob_dict[e] = self.hist[e]/total
 
-# Function to write output image
+    # Writes the encoded image to the specified output path using OpenCV.
     def outImage(self, path):
         self.path_out = path
         try:
@@ -89,21 +97,21 @@ class Image:
         except:
             print("Error in writing the image")
 
-# Creating Nodes for intensities
+    # Creates nodes for each intensity value based on their probabilities.
     def buildNodes(self):
         for key in self.prob_dict:
             leaf = Node(key, self.prob_dict[key], 1)
             self.allNodes.append(leaf)
 
-# comparator function for sorting
+    # A comparison function used for sorting nodes by their probabilities.
     def prob_key(self, e):
         return e.prob
 
-# Creating UPTREE
+    # Constructs the Huffman tree (upward) by merging nodes with the lowest probabilities until a single root node is created.
     def upTree(self):
 
         import heapq
-        self.buildNodes()        # Creating Nodes
+        self.buildNodes() # Creating Nodes
 
         # Sorting all Nodes in workspace to create uptree
         workspace = sorted(cp(self.allNodes), key=self.prob_key)
@@ -119,13 +127,13 @@ class Image:
             new_node.c[1] = c2
 
             workspace = list(heapq.merge(
-                workspace, [new_node], key=self.prob_key))   # Pushing the created Node into Workspace
+                workspace, [new_node], key=self.prob_key)) # Pushing the created Node into Workspace
             # Break if probability of prepared node is 1, indicating preparing upTree is completed
             if(new_node.prob == 1.0):
                 self.root = new_node        # And storing it as root Node
                 return
 
-# Creating Down Tree ie assigning words to Leaf Nodes from Root
+    # Assigns Huffman codes (words) to leaf nodes (downward) starting from the root node.
     def downTree(self, root, word):
         root.word = word
         if(root.isLeaf):
@@ -135,6 +143,7 @@ class Image:
         if(root.c[1] != None):
             self.downTree(root.c[1], word+'1')
 
+    # Combine the upTree and downTree functions to perform Huffman coding on the image, resulting in an encoded string.
     def huffmanAlgo(self):
         self.upTree()                   # Creating UpTree
         self.downTree(self.root, "")    # Creating DownTree
@@ -160,6 +169,7 @@ class Image:
 
         self.encodedString = encodedString
 
+    # Writes the encoded string to a binary file using the bitstring library.
     def sendBinaryData(self, path):
         #  Our self.encodedString is just list of strigs with characters char('0') & char('1')
         # but we should not directly write char('0') and char('1') , because each of them take 1byte = 8bits, so we are converting the char('0') and char('1') to binary(0) & binary(1)
@@ -170,6 +180,7 @@ class Image:
         obj.tofile(file)
         file.close()
 
+    # Reads the encoded binary data from a file, decodes it, and stores the decoded values in decodeList.
     def decode(self, path):
         # Now we have a file , we will try to read its contents
         # For reading binary from file we are using bitarray library (this is different one from above used BitArray)
@@ -214,6 +225,7 @@ class Image:
 
         self.decodeList = decodeList
 
+    # Reconstructs the image from the decoded values, considering dimensions and intensity values.
     def decodeIm(self, path):
         self.decode(path)
 
@@ -229,7 +241,7 @@ class Image:
 
         out = np.zeros((out_r, out_c, out_d))
 
-        # Filling the out put image
+        # Filling the output image
 
         for i in range(len(decodeList)):
             id = i//out_d
