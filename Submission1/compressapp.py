@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import ttk
+from tkinter import ttk, messagebox
+from os import path
+import rle
 
 #TODO:
 #Add error-handling
@@ -17,9 +19,35 @@ def browse_destination():
     destination_entry.delete(0, tk.END)
     destination_entry.insert(0, destination_path)
 
-def runlength():
-    #insert algo here
-    pass
+def runlength(input_file, output_path): #doesn't work.
+    filename = path.basename(input_file)+"_compressed.bin"
+    output_file = path.join(output_path, filename)
+
+    try:
+        with open(input_file, 'rb') as f:
+            data = f.read()
+    except FileNotFoundError:
+        print(f"Error: The input file '{input_file}' does not exist.")
+        return
+
+    # Check if the data is empty
+    if not data:
+        print(f"Warning: The input file '{input_file}' is empty. No compression performed.")
+        return
+
+    # Ensure that data is of type 'bytes'
+    if not isinstance(data, bytes):
+        print(f"Error: The input file '{input_file}' could not be read as bytes.")
+        return
+
+    # Encode the data using RLE
+    encoded_data = rle.encode(data)
+
+    # Save the encoded data to the output file
+    with open(output_file, 'wb') as f:
+        f.write(bytes(encoded_data))
+
+    print(f"Encoded {input_file} to {output_file}")
 
 def arithmetic():
     #insert algo here
@@ -81,10 +109,29 @@ option_functions = {
     "Dictionary-based": dictionary
 }
 
+def check_file_path():
+    file_path = file_entry.get()
+    file_destination = destination_entry.get()
+    selected_algorithm = dropdown_var.get()
+
+    if not path.exists(file_path):
+        messagebox.showerror(title="Error", message="Sorry, it seems like the path to the file is not found. please specify a correct path")
+    elif not path.exists(file_destination):
+        messagebox.showerror(title="Error", message="Sorry, it seems like the path for the destination is incorrect. please try again.")
+    elif selected_algorithm not in option_functions:
+        messagebox.showerror(title="Error", message="Please choose an algorithm!")
+    else:
+        return True
+
 def execute_selected_option():
-    selected_option = dropdown_var.get()
-    if selected_option in option_functions:
-        option_functions[selected_option]()
+    if check_file_path() == True:
+        selected_option = dropdown_var.get()
+        file_path = file_entry.get()
+        file_destination = destination_entry.get()
+        
+        if selected_option in option_functions:
+            option_functions[selected_option](file_path, file_destination)
+        
 
 button = tk.Button(root, text="Compress!", command=execute_selected_option)
 button.pack()
