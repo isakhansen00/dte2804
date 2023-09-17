@@ -5,6 +5,8 @@ import numpy as np
 from copy import deepcopy as cp
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
+import tkinter as tk
+from tkinter import filedialog
 
 """
 The code aims to apply Huffman coding to compress an image by representing frequently occurring intensity values with shorter binary codes and less frequent values with longer codes. 
@@ -376,10 +378,47 @@ class Image:
 
         plt.show()
 
+class ImageHuffmanEncodingApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Image Huffman Encoder")
+        self.root.geometry("400x100")
+        self.file_path = None
 
-image = Image()
-image.huffmanCode("./sui.png", "./compressed.bin",
-                  "./output.png", toCheck=1)
+        label = tk.Label(root, text="Select a PNG/JPEG file and encode with huffman:")
+        label.pack()
+
+        file_frame = tk.Frame(root)
+        file_frame.pack()
+
+        file_label = tk.Label(file_frame, text="Select File:")
+        file_label.pack(side=tk.LEFT)
+
+        self.file_entry = tk.Entry(file_frame, width=40)
+        self.file_entry.pack(side=tk.LEFT)
+
+        # Create buttons
+        self.select_button = tk.Button(file_frame, text="Select Image", command=self.select_image)
+        self.select_button.pack()
+
+        self.generate_button = tk.Button(root, text="Encode Image", command=self.encode_image)
+        self.generate_button.pack()
+
+    def select_image(self):
+        self.file_path = filedialog.askopenfilename(title="Select an image")
+        self.file_entry.delete(0, tk.END)
+        self.file_entry.insert(0, self.file_path)
+    
+    def encode_image(self):
+        if self.file_path:
+            image = Image()
+            image.huffmanCode(self.file_path, "./compressed.bin",
+                            "./output.png", toCheck=1)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ImageHuffmanEncodingApp(root)
+    root.mainloop()
 
 """
 Filstørrelsen til compressed.bin blir større enn det originale sui.png-bildet fordi Huffman-kodealgoritmen implementert i koden din ikke er laget for å redusere størrelsen på bildet. 
