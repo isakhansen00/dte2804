@@ -1,4 +1,5 @@
 # https://narainsreehith.medium.com/huffman-coding-on-image-d6092bed5821
+# https://www.programiz.com/dsa/huffman-coding
 
 import cv2
 import numpy as np
@@ -378,6 +379,7 @@ class Image:
 
         plt.show()
 
+# This class represents the Tkinter application
 class ImageHuffmanEncodingApp:
     def __init__(self, root):
         self.root = root
