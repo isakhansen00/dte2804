@@ -3,6 +3,9 @@ from tkinter import filedialog
 from tkinter import ttk, messagebox
 from os import path
 import rle
+import cv2 as cv
+import os
+import pickle
 
 #TODO:
 #Add error-handling
@@ -24,30 +27,35 @@ def runlength(input_file, output_path): #doesn't work.
     output_file = path.join(output_path, filename)
 
     try:
-        with open(input_file, 'rb') as f:
-            data = f.read()
+        supported_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
+        file_extension = os.path.splitext(input_file)[1].lower() 
+        if file_extension in supported_formats:
+            data = cv.imread(input_file).flatten()
+            print(data)
+        else:
+            with open(input_file, 'rb') as f:
+                data = f.read()
     except FileNotFoundError:
         print(f"Error: The input file '{input_file}' does not exist.")
         return
 
-    # Check if the data is empty
-    if not data:
-        print(f"Warning: The input file '{input_file}' is empty. No compression performed.")
-        return
-
-    # Ensure that data is of type 'bytes'
-    if not isinstance(data, bytes):
-        print(f"Error: The input file '{input_file}' could not be read as bytes.")
-        return
 
     # Encode the data using RLE
     encoded_data = rle.encode(data)
 
     # Save the encoded data to the output file
-    with open(output_file, 'wb') as f:
-        f.write(bytes(encoded_data))
+    try:
+        if file_extension in supported_formats:
+            pickle.dump(encoded_data, open(output_file, 'wb'))
 
-    print(f"Encoded {input_file} to {output_file}")
+            print(f"Encoded {input_file} to {output_file}")
+        else:
+            with open(output_file, 'wb') as f:
+                f.write(bytes(encoded_data))
+
+            print(f"Encoded {input_file} to {output_file}")
+    except Exception as e:
+        print(e)
 
 def arithmetic():
     #insert algo here
