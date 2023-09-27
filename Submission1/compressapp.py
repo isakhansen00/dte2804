@@ -8,6 +8,8 @@ import os
 import pickle
 import wave
 import numpy as np
+from arithmetic_compressor import AECompressor
+from arithmetic_compressor.models import StaticModel
 
 #TODO:
 #Add error-handling
@@ -68,9 +70,62 @@ def runlength(input_file, output_path): #doesn't work.
     except Exception as e:
         print(e)
 
-def arithmetic():
-    #insert algo here
-    pass
+def arithmetic(input_file, output_path):
+
+    numbers = {}
+    alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+
+    for i in range(256):
+        numbers[i] = 0.5
+    
+    # create the model
+    model = StaticModel(numbers)
+
+    # create an arithmetic coder
+    coder = AECompressor(model)
+
+    filename = path.basename(input_file)+"_compressed.txt"
+    output_file = path.join(output_path, filename)
+
+    try:
+        img_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
+        sound_formats = ['.wav']
+        file_extension = os.path.splitext(input_file)[1].lower() 
+        if file_extension in img_formats:
+            data = cv.imread(input_file).flatten()
+            print(data)
+        elif file_extension in sound_formats:
+            with wave.open(input_file, 'rb') as audio_file:
+                params = audio_file.getparams()
+                data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
+                print(data)
+        else:
+            with open(input_file, 'r') as f:
+                data = f.read()
+    except FileNotFoundError:
+        print(f"Error: The input file '{input_file}' does not exist.")
+        return
+
+
+    # Encode the data using RLE
+    encoded_data = coder.compress(data)
+
+    # Save the encoded data to the output file
+    try:
+        if file_extension in img_formats:
+            with open(output_file, 'w') as f:
+                f.write(str(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
+        elif file_extension in sound_formats:
+            with open(output_file, 'w') as encoded_audio_file:
+                #encoded_audio_file.setparams(params)
+                encoded_audio_file.write(str(encoded_data))
+        else:
+            with open(output_file, 'w') as f:
+                f.write(str(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
+    except Exception as e:
+        print(e)
 
 def hufman():
     #insert algo here
