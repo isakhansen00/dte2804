@@ -39,6 +39,7 @@ def runlength(input_file, output_path): #doesn't work.
             with wave.open(input_file, 'rb') as audio_file:
                 params = audio_file.getparams()
                 data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
+                print(data)
         else:
             with open(input_file, 'r') as f:
                 data = f.read()
@@ -57,9 +58,9 @@ def runlength(input_file, output_path): #doesn't work.
                 f.write(str(encoded_data))
                 print(f"Encoded {input_file} to {output_file}")
         elif file_extension in sound_formats:
-            with wave.open(output_file, 'wb') as encoded_audio_file:
-                encoded_audio_file.setparams(params)
-                encoded_audio_file.writeframes(encoded_data.tobytes())
+            with open(output_file, 'w') as encoded_audio_file:
+                #encoded_audio_file.setparams(params)
+                encoded_audio_file.write(str(encoded_data))
         else:
             with open(output_file, 'w') as f:
                 f.write(str(encoded_data))
