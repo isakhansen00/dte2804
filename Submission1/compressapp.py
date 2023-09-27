@@ -6,6 +6,8 @@ import rle
 import cv2 as cv
 import os
 import pickle
+import wave
+import numpy as np
 
 #TODO:
 #Add error-handling
@@ -23,17 +25,22 @@ def browse_destination():
     destination_entry.insert(0, destination_path)
 
 def runlength(input_file, output_path): #doesn't work.
-    filename = path.basename(input_file)+"_compressed.bin"
+    filename = path.basename(input_file)+"_compressed.txt"
     output_file = path.join(output_path, filename)
 
     try:
-        supported_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
+        img_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
+        sound_formats = ['.wav']
         file_extension = os.path.splitext(input_file)[1].lower() 
-        if file_extension in supported_formats:
+        if file_extension in img_formats:
             data = cv.imread(input_file).flatten()
             print(data)
+        elif file_extension in sound_formats:
+            with wave.open(input_file, 'rb') as audio_file:
+                params = audio_file.getparams()
+                data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
         else:
-            with open(input_file, 'rb') as f:
+            with open(input_file, 'r') as f:
                 data = f.read()
     except FileNotFoundError:
         print(f"Error: The input file '{input_file}' does not exist.")
@@ -45,15 +52,18 @@ def runlength(input_file, output_path): #doesn't work.
 
     # Save the encoded data to the output file
     try:
-        if file_extension in supported_formats:
-            pickle.dump(encoded_data, open(output_file, 'wb'))
-
-            print(f"Encoded {input_file} to {output_file}")
+        if file_extension in img_formats:
+            with open(output_file, 'w') as f:
+                f.write(str(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
+        elif file_extension in sound_formats:
+            with wave.open(output_file, 'wb') as encoded_audio_file:
+                encoded_audio_file.setparams(params)
+                encoded_audio_file.writeframes(encoded_data.tobytes())
         else:
-            with open(output_file, 'wb') as f:
-                f.write(bytes(encoded_data))
-
-            print(f"Encoded {input_file} to {output_file}")
+            with open(output_file, 'w') as f:
+                f.write(str(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
     except Exception as e:
         print(e)
 
