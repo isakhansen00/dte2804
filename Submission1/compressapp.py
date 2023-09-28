@@ -11,6 +11,7 @@ from arithmetic_compressor import AECompressor
 from arithmetic_compressor.models import StaticModel
 import string
 from dahuffman import HuffmanCodec, load_shakespeare
+from lempelzivwelch import LZWCompress
 
 #TODO:
 #Add error-handling
@@ -37,12 +38,11 @@ def runlength(input_file, output_path): #doesn't work.
         file_extension = os.path.splitext(input_file)[1].lower() 
         if file_extension in img_formats:
             data = cv.imread(input_file).flatten()
-            print(data)
         elif file_extension in sound_formats:
             with wave.open(input_file, 'rb') as audio_file:
                 params = audio_file.getparams()
                 data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
-                print(data)
+    
         else:
             with open(input_file, 'r') as f:
                 data = f.read()
@@ -220,7 +220,54 @@ def huffman(input_file, output_path):
 
 def dictionary(input_file, output_path):
     #insert algo here
-    pass
+    filename = path.basename(input_file)+"_compressed.txt"
+    output_file = path.join(output_path, filename)
+
+    try:
+        img_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
+        sound_formats = ['.wav']
+        file_extension = os.path.splitext(input_file)[1].lower() 
+        if file_extension in img_formats:
+            
+            data = cv.imread(input_file).flatten()
+            data = data.tolist()
+            data = map(str, data)
+        elif file_extension in sound_formats:
+            with wave.open(input_file, 'rb') as audio_file:
+                params = audio_file.getparams()
+                data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
+                data = data.tolist()
+                data = map(str, data)
+        else:
+            with open(input_file, 'r') as f:
+                data = f.read()
+
+    except FileNotFoundError:
+        print(f"Error: The input file '{input_file}' does not exist.")
+        return
+
+    # data = data.tolist()
+    # data = map(str, data)
+    # Encode the data using RLE
+    encoded_data = LZWCompress(data)
+
+    # Save the encoded data to the output file
+    try:
+        if file_extension in img_formats:
+            with open(output_file, 'w') as f:
+                f.write(str(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
+        elif file_extension in sound_formats:
+            with open(output_file, 'w') as encoded_audio_file:
+                #encoded_audio_file.setparams(params)
+                encoded_audio_file.write(str(encoded_data))
+        else:
+            with open(output_file, 'w') as f:
+                print(encoded_data)
+                f.write(str(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
+    except Exception as e:
+        print(e)
 
 root = tk.Tk()
 root.title("The Compressinator")
