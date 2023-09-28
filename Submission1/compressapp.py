@@ -5,11 +5,12 @@ from os import path
 import rle
 import cv2 as cv
 import os
-import pickle
 import wave
 import numpy as np
 from arithmetic_compressor import AECompressor
 from arithmetic_compressor.models import StaticModel
+import string
+from dahuffman import HuffmanCodec, load_shakespeare
 
 #TODO:
 #Add error-handling
@@ -73,13 +74,38 @@ def runlength(input_file, output_path): #doesn't work.
 def arithmetic(input_file, output_path):
 
     numbers = {}
-    alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+    numbers_string = {}
+    alphabet = {}
+    signs = {}
+    hex_digits = {}
+    whitespace = {}
+    alphabet_list = list(string.ascii_letters)
+    signs_list = list(string.punctuation) + ["\n"]
+    hex_digits_list = list(string.hexdigits)
+    whitespace_list = list(string.whitespace)
 
     for i in range(256):
         numbers[i] = 0.5
     
+    for i in range(256):
+        numbers_string[str(i)] = 0.5
+
+    for i in alphabet_list:
+        alphabet[i] = 0.5
+    
+    for i in signs_list:
+        signs[i] = 0.5
+
+    for i in hex_digits_list:
+        hex_digits[i] = 0.5
+
+    for i in whitespace_list:
+        whitespace[i] = 0.5
+
+    prob = {**numbers, **alphabet, **signs, **numbers_string, **hex_digits, **whitespace}
+    
     # create the model
-    model = StaticModel(numbers)
+    model = StaticModel(prob)
 
     # create an arithmetic coder
     coder = AECompressor(model)
@@ -93,12 +119,10 @@ def arithmetic(input_file, output_path):
         file_extension = os.path.splitext(input_file)[1].lower() 
         if file_extension in img_formats:
             data = cv.imread(input_file).flatten()
-            print(data)
         elif file_extension in sound_formats:
             with wave.open(input_file, 'rb') as audio_file:
                 params = audio_file.getparams()
                 data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
-                print(data)
         else:
             with open(input_file, 'r') as f:
                 data = f.read()
@@ -107,7 +131,7 @@ def arithmetic(input_file, output_path):
         return
 
 
-    # Encode the data using RLE
+    # Encode the data using Arithmetic
     encoded_data = coder.compress(data)
 
     # Save the encoded data to the output file
@@ -127,11 +151,74 @@ def arithmetic(input_file, output_path):
     except Exception as e:
         print(e)
 
-def hufman():
-    #insert algo here
-    pass
+def huffman(input_file, output_path):
 
-def dictionary():
+    img_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
+    sound_formats = ['.wav']
+    file_extension = os.path.splitext(input_file)[1].lower() 
+    
+    numbers = []
+    numbers_string = []
+    alphabet_list = list(string.ascii_letters)
+    signs_list = list(string.punctuation) + ["\n"]
+    hex_digits_list = list(string.hexdigits)
+    whitespace_list = list(string.whitespace)
+
+    freq_list = []
+
+    for i in range(256):
+        numbers.append(i)
+    
+    for i in range(256):
+        numbers_string.append(str(i))
+
+    if file_extension in img_formats or file_extension in sound_formats:
+        freq_list = numbers
+    else:
+        freq_list = numbers_string + alphabet_list + signs_list + whitespace_list
+
+    coder = HuffmanCodec.from_data(freq_list)
+
+    filename = path.basename(input_file)+"_compressed.bin"
+    output_file = path.join(output_path, filename)
+
+    try:
+        if file_extension in img_formats:
+            data = cv.imread(input_file).flatten()
+        elif file_extension in sound_formats:
+            with wave.open(input_file, 'rb') as audio_file:
+                params = audio_file.getparams()
+                data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
+        else:
+            with open(input_file, 'r') as f:
+                data = f.read()
+    except FileNotFoundError:
+        print(f"Error: The input file '{input_file}' does not exist.")
+        return
+
+
+    # Encode the data using Arithmetic
+    encoded_data = coder.encode(data)
+
+    # Save the encoded data to the output file
+    try:
+        if file_extension in img_formats:
+            with open(output_file, 'wb') as f:
+                f.write(bytes(encoded_data))
+                print(len(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
+        elif file_extension in sound_formats:
+            with open(output_file, 'wb') as encoded_audio_file:
+                #encoded_audio_file.setparams(params)
+                encoded_audio_file.write(bytes(encoded_data))
+        else:
+            with open(output_file, 'w') as f:
+                f.write(str(encoded_data))
+                print(f"Encoded {input_file} to {output_file}")
+    except Exception as e:
+        print(e)
+
+def dictionary(input_file, output_path):
     #insert algo here
     pass
 
@@ -179,7 +266,7 @@ dropdown.pack()
 option_functions = {
     "RLE": runlength,
     "Arithmetic": arithmetic,
-    "Hufman": hufman,
+    "Hufman": huffman,
     "Dictionary-based": dictionary
 }
 
