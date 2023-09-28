@@ -16,6 +16,7 @@ from lempelzivwelch import LZWCompress
 #TODO:
 #Add error-handling
 #Add success-message
+#Clean up some stuff
 
 
 def browse_file():
