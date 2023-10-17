@@ -13,10 +13,6 @@ import string
 from dahuffman import HuffmanCodec
 from lempelzivwelch import LZWCompress
 
-#TODO:
-#Clean up some stuff
-
-
 def browse_file():
     file_path = filedialog.askopenfilename()
     file_entry.delete(0, tk.END)
@@ -31,6 +27,7 @@ def runlength(input_file, output_path):
     filename = path.basename(input_file)+"_compressed.txt"
     output_file = path.join(output_path, filename)
 
+    # Read input file
     try:
         img_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
         sound_formats = ['.wav']
@@ -41,14 +38,15 @@ def runlength(input_file, output_path):
             with wave.open(input_file, 'rb') as audio_file:
                 params = audio_file.getparams()
                 data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
-    
         else:
             with open(input_file, 'r') as f:
-                data = f.read()
+                try:
+                    data = f.read()
+                except:
+                    tk.messagebox.showwarning(title="Error", message="Error, the app can not compress this file type")
     except FileNotFoundError:
         print(f"Error: The input file '{input_file}' does not exist.")
         return
-
 
     # Encode the data using RLE
     encoded_data = rle.encode(data)
@@ -58,14 +56,15 @@ def runlength(input_file, output_path):
         if file_extension in img_formats:
             with open(output_file, 'w') as f:
                 f.write(str(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         elif file_extension in sound_formats:
             with open(output_file, 'w') as encoded_audio_file:
                 encoded_audio_file.write(str(encoded_data))
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         else:
             with open(output_file, 'w') as f:
                 f.write(str(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
     except Exception as e:
         print(e)
 
@@ -82,6 +81,7 @@ def arithmetic(input_file, output_path):
     hex_digits_list = list(string.hexdigits)
     whitespace_list = list(string.whitespace)
 
+    # Making all the probabilities for characters
     for i in range(256):
         numbers[i] = 0.5
     
@@ -111,6 +111,7 @@ def arithmetic(input_file, output_path):
     filename = path.basename(input_file)+"_compressed.txt"
     output_file = path.join(output_path, filename)
 
+    # Read input file
     try:
         img_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
         sound_formats = ['.wav']
@@ -123,7 +124,10 @@ def arithmetic(input_file, output_path):
                 data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
         else:
             with open(input_file, 'r') as f:
-                data = f.read()
+                try:
+                    data = f.read()
+                except:
+                    tk.messagebox.showwarning(title="Error", message="Error, the app can not compress this file type")
     except FileNotFoundError:
         print(f"Error: The input file '{input_file}' does not exist.")
         return
@@ -137,14 +141,15 @@ def arithmetic(input_file, output_path):
         if file_extension in img_formats:
             with open(output_file, 'w') as f:
                 f.write(str(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         elif file_extension in sound_formats:
             with open(output_file, 'w') as encoded_audio_file:
                 encoded_audio_file.write(str(encoded_data))
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         else:
             with open(output_file, 'w') as f:
                 f.write(str(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
     except Exception as e:
         print(e)
 
@@ -158,7 +163,6 @@ def huffman(input_file, output_path):
     numbers_string = []
     alphabet_list = list(string.ascii_letters)
     signs_list = list(string.punctuation) + ["\n"]
-    hex_digits_list = list(string.hexdigits)
     whitespace_list = list(string.whitespace)
 
     freq_list = []
@@ -179,6 +183,7 @@ def huffman(input_file, output_path):
     filename = path.basename(input_file)+"_compressed.bin"
     output_file = path.join(output_path, filename)
 
+    # Read input file
     try:
         if file_extension in img_formats:
             data = cv.imread(input_file).flatten()
@@ -188,7 +193,10 @@ def huffman(input_file, output_path):
                 data = np.frombuffer(audio_file.readframes(params.nframes), dtype=np.uint8)
         else:
             with open(input_file, 'r') as f:
-                data = f.read()
+                try:
+                    data = f.read()
+                except:
+                    tk.messagebox.showwarning(title="Error", message="Error, the app can not compress this file type")
     except FileNotFoundError:
         print(f"Error: The input file '{input_file}' does not exist.")
         return
@@ -202,30 +210,28 @@ def huffman(input_file, output_path):
         if file_extension in img_formats:
             with open(output_file, 'wb') as f:
                 f.write(bytes(encoded_data))
-                print(len(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         elif file_extension in sound_formats:
             with open(output_file, 'wb') as encoded_audio_file:
-                #encoded_audio_file.setparams(params)
                 encoded_audio_file.write(bytes(encoded_data))
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         else:
             with open(output_file, 'w') as f:
                 f.write(str(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
     except Exception as e:
         print(e)
 
 def dictionary(input_file, output_path):
-    #insert algo here
     filename = path.basename(input_file)+"_compressed.txt"
     output_file = path.join(output_path, filename)
 
+    # Read input file
     try:
         img_formats = ['.jpg', '.jpeg', '.png', '.bmp', '.gif', '.tiff', '.tif']
         sound_formats = ['.wav']
         file_extension = os.path.splitext(input_file)[1].lower() 
         if file_extension in img_formats:
-            
             data = cv.imread(input_file).flatten()
             data = data.tolist()
             data = map(str, data)
@@ -237,8 +243,10 @@ def dictionary(input_file, output_path):
                 data = map(str, data)
         else:
             with open(input_file, 'r') as f:
-                data = f.read()
-
+                try:
+                    data = f.read()
+                except:
+                    tk.messagebox.showwarning(title="Error", message="Error, the app can not compress this file type")
     except FileNotFoundError:
         print(f"Error: The input file '{input_file}' does not exist.")
         return
@@ -251,15 +259,15 @@ def dictionary(input_file, output_path):
         if file_extension in img_formats:
             with open(output_file, 'w') as f:
                 f.write(str(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         elif file_extension in sound_formats:
             with open(output_file, 'w') as encoded_audio_file:
                 encoded_audio_file.write(str(encoded_data))
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
         else:
             with open(output_file, 'w') as f:
-                print(encoded_data)
                 f.write(str(encoded_data))
-                print(f"Encoded {input_file} to {output_file}")
+            tk.messagebox.showinfo(title="Compression Done", message="Compression Done")
     except Exception as e:
         print(e)
 
@@ -267,7 +275,7 @@ root = tk.Tk()
 root.title("The Compressinator")
 root.geometry("400x200")  # Set the window size
 
-label = tk.Label(root, text="Select a File, Destination Folder, and compression algorithm:")
+label = tk.Label(root, text="Select a File, Destination Folder, and Compression algorithm:")
 label.pack()
 
 file_frame = tk.Frame(root)
@@ -297,12 +305,10 @@ destination_browse_button.pack(side=tk.LEFT)
 option_label = tk.Label(root, text="Select Algorithm:")
 option_label.pack()
 
-options = ["RLE", "Arithmetic", "Hufman", "Dictionary-based"]
+options = ["RLE", "Arithmetic", "Huffman", "Dictionary-based"]
 dropdown_var = tk.StringVar(root)
 dropdown = ttk.Combobox(root, textvariable=dropdown_var, values=options)
 dropdown.pack()
-
-
 
 option_functions = {
     "RLE": runlength,
