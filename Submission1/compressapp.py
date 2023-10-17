@@ -10,12 +10,10 @@ import numpy as np
 from arithmetic_compressor import AECompressor
 from arithmetic_compressor.models import StaticModel
 import string
-from dahuffman import HuffmanCodec, load_shakespeare
+from dahuffman import HuffmanCodec
 from lempelzivwelch import LZWCompress
 
 #TODO:
-#Add error-handling
-#Add success-message
 #Clean up some stuff
 
 
@@ -29,7 +27,7 @@ def browse_destination():
     destination_entry.delete(0, tk.END)
     destination_entry.insert(0, destination_path)
 
-def runlength(input_file, output_path): #doesn't work.
+def runlength(input_file, output_path):
     filename = path.basename(input_file)+"_compressed.txt"
     output_file = path.join(output_path, filename)
 
@@ -63,7 +61,6 @@ def runlength(input_file, output_path): #doesn't work.
                 print(f"Encoded {input_file} to {output_file}")
         elif file_extension in sound_formats:
             with open(output_file, 'w') as encoded_audio_file:
-                #encoded_audio_file.setparams(params)
                 encoded_audio_file.write(str(encoded_data))
         else:
             with open(output_file, 'w') as f:
@@ -143,7 +140,6 @@ def arithmetic(input_file, output_path):
                 print(f"Encoded {input_file} to {output_file}")
         elif file_extension in sound_formats:
             with open(output_file, 'w') as encoded_audio_file:
-                #encoded_audio_file.setparams(params)
                 encoded_audio_file.write(str(encoded_data))
         else:
             with open(output_file, 'w') as f:
@@ -247,8 +243,6 @@ def dictionary(input_file, output_path):
         print(f"Error: The input file '{input_file}' does not exist.")
         return
 
-    # data = data.tolist()
-    # data = map(str, data)
     # Encode the data using RLE
     encoded_data = LZWCompress(data)
 
@@ -260,7 +254,6 @@ def dictionary(input_file, output_path):
                 print(f"Encoded {input_file} to {output_file}")
         elif file_extension in sound_formats:
             with open(output_file, 'w') as encoded_audio_file:
-                #encoded_audio_file.setparams(params)
                 encoded_audio_file.write(str(encoded_data))
         else:
             with open(output_file, 'w') as f:
