@@ -1,92 +1,184 @@
+import cv2
 import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib.colors import Normalize
+import matplotlib.cm as cm
 import scipy.fftpack as fft
-import heapq
-import collections
+from dahuffman import HuffmanCodec
+import sys
 
-# Performing FFT (Fast Fourier Transform)
-def perform_fft(data):
-    return fft.fft(data)
+# Load the images
+image_ronaldo = cv2.imread('sui.png', cv2.IMREAD_GRAYSCALE)
+image_messi = cv2.imread('messi.jpeg', cv2.IMREAD_GRAYSCALE)
 
-# Using a simple uniform quantization scheme to performe quantization
-def quantize(data, bits=8):
-    quantization_levels = 2**bits
-    max_val = np.max(np.abs(data))
-    step_size = 2 * max_val / quantization_levels
-    quantized_data = np.round(data / step_size) * step_size
-    return quantized_data
+# Define the block size
+B = 8
+def quantize(fft, quantize):
+    quantized_fft_matrix = np.round(fft / quantize)
+    return quantized_fft_matrix
 
-# Define a Huffman encoding and decoding functions
-def build_huffman_tree(freq_map):
-    heap = [[weight, [char, ""]] for char, weight in freq_map.items()]
-    heapq.heapify(heap)
-    while len(heap) > 1:
-        lo = heapq.heappop(heap)
-        hi = heapq.heappop(heap)
-        for pair in lo[1:]:
-            pair[1] = '0' + pair[1]
-        for pair in hi[1:]:
-            pair[1] = '1' + pair[1]
-        heapq.heappush(heap, [lo[0] + hi[0]] + lo[1:] + hi[1:])
-    return sorted(heap[0][1:], key=lambda p: (len(p[-1]), p))
+def dequantize_fft(fft_matrix, quantization_matrix):
+    # Reverse quantization by multiplying with the quantization matrix
+    decompressed_fft_matrix = np.multiply(fft_matrix, quantization_matrix)
+    return decompressed_fft_matrix
 
-def encode_huffman(data, huffman_map):
-    encoded_data = "".join(huffman_map[d] for d in data)
-    return encoded_data
+# Huffman encoding and decoding functions
+def huffman_encode(data):
+    codec = HuffmanCodec.from_data(data)
+    encoded = codec.encode(data)
+    return encoded, codec
 
-def decode_huffman(encoded_data, huffman_tree):
-    decoded_data = []
-    while encoded_data:
-        for char, code in huffman_tree:
-            if encoded_data.startswith(code):
-                decoded_data.append(str(char))
-                encoded_data = encoded_data[len(code):]
-                break
-    return "".join(decoded_data)
+def huffman_decode(encoded, codec):
+    decoded = codec.decode(encoded)
+    return decoded
 
-# Calculating the compression ratio
-def calculate_compression_ratio(original_data, encoded_data):
-    original_size = len(original_data) * 8  # Convert characters to bits (assuming 8 bits per character)
-    compressed_size = len(encoded_data)
-    compression_ratio = original_size / compressed_size
-    return compression_ratio
+# Crop the image to ensure its dimensions are multiples of B
+height, width = image_ronaldo.shape
+new_height = (height // B) * B
+new_width = (width // B) * B
+cropped_image_ronaldo = image_ronaldo[:new_height, :new_width]
 
-def main():
-    # Sample data
-    original_data = "this is a sample text for compression"
+height2, width2 = image_messi.shape
+new_height2 = (height2 // B) * B
+new_width2 = (width2 // B) * B
+cropped_image_messi = image_messi[:new_height2, :new_width2]
 
-    # Convert the text data to numerical data (e.g., ASCII values)
-    # The FFT operates on numerical data
-    numerical_data = np.array([ord(char) for char in original_data])
+quantization_matrix = np.array([
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200]
+])
+# Initialize variables to store the transformed and reconstructed images
+trans_ronaldo = np.zeros(cropped_image_ronaldo.shape, dtype=np.float32)
+trans_messi = np.zeros(cropped_image_messi.shape, dtype=np.float32)
+reconstructed_ronaldo = np.zeros(cropped_image_ronaldo.shape, dtype=np.float32)
+reconstructed_messi = np.zeros(cropped_image_messi.shape, dtype=np.float32)
 
-    # Step 1: FFT
-    fft_data = perform_fft(numerical_data)
+# Perform the FFT and IFFT block by block (Ronaldo)
+for y in range(0, new_height, B):
+    for x in range(0, new_width, B):
+        block = cropped_image_ronaldo[y:y + B, x:x + B]
 
-    # Step 2: Quantization
-    quantized_data = quantize(fft_data)
+        # Apply FFT
+        fft_block = fft.fft(np.float32(block))
+        trans_ronaldo[y:y + B, x:x + B] = fft_block
 
-    # Convert the quantized data to real numbers for Huffman encoding
-    quantized_data = quantized_data.real.astype(int).tolist()
+        # Apply quantization
+        quantized_a = quantize(fft_block, quantization_matrix)
 
-    # Step 3: Huffman Coding
-    freq_map = collections.Counter(quantized_data)
-    huffman_tree = build_huffman_tree(freq_map)
-    huffman_map = dict(huffman_tree)
-    encoded_data = encode_huffman(quantized_data, huffman_map)
+        # Convert the quantized data to a 1D array (you may need to reshape or flatten it)
+        quantized_a_1d = quantized_a.reshape(-1)
+        
+        # Apply Huffman encoding
+        encoded_data, huffman_codec = huffman_encode(quantized_a_1d)
+        
+        # Apply Huffman decoding
+        decoded_data = huffman_decode(encoded_data, huffman_codec)
 
-    # Decode the data
-    decoded_data = decode_huffman(encoded_data, huffman_tree)
-    print(decoded_data)
+        # Convert the decoded data list to a NumPy array
+        decoded_block = np.array(decoded_data).reshape(B, B)
 
-    # Calculate the compression ratio
-    compression_ratio = calculate_compression_ratio(numerical_data, encoded_data)
-    print(f"Compression Ratio: {compression_ratio:.2f}")
+        # Apply dequantization
+        dequantized_matrix_a = dequantize_fft(decoded_block, quantization_matrix)
 
-if __name__ == "__main__":
-    main()
+        # Apply IFFT
+        ifft_block_a = fft.ifft(dequantized_matrix_a)
+        reconstructed_ronaldo[y:y + B, x:x + B] = ifft_block_a
 
-"""
-Please note that this is a simplified example. In a real-world scenario, you would need to handle various details, 
-such as handling compression metadata, error handling, and dealing with different data types. 
-Professional compression algorithms like JPEG and MP3 use more sophisticated techniques to achieve high compression ratios 
-with minimal loss of information.
-"""
+# Perform the FFT and IFFT block by block (Messi)
+for y in range(0, new_height2, B):
+    for x in range(0, new_width2, B):
+        block2 = cropped_image_messi[y:y + B, x:x + B]
+
+        # Apply FFT
+        fft_block2 = fft.fft(np.float32(block2))
+        trans_messi[y:y + B, x:x + B] = fft_block2
+
+        # Apply quantization
+        quantized_b = quantize(fft_block2, quantization_matrix)
+
+        # Convert the quantized data to a 1D array (you may need to reshape or flatten it)
+        quantized_b_1d = quantized_b.reshape(-1)
+        
+        # Apply Huffman encoding
+        encoded_data2, huffman_codec2 = huffman_encode(quantized_b_1d)
+        
+        # Apply Huffman decoding
+        decoded_data2 = huffman_decode(encoded_data2, huffman_codec2)
+
+        # Convert the decoded data list to a NumPy array
+        decoded_block2 = np.array(decoded_data2).reshape(B, B)
+
+        # Apply dequantization
+        dequantized_matrix_b = dequantize_fft(decoded_block2, quantization_matrix)
+
+        # Apply IFFT
+        ifft_block_b = fft.ifft(dequantized_matrix_b)
+        reconstructed_messi[y:y + B, x:x + B] = ifft_block_b
+
+# Calculate the size in bytes of the original image
+original_image_size_ronaldo = sys.getsizeof(image_ronaldo)
+original_image_size_messi = sys.getsizeof(image_messi)
+
+# Calculate the size in bytes of the encoded data
+encoded_data_size_ronaldo = sys.getsizeof(encoded_data)
+encoded_data_size_messi = sys.getsizeof(encoded_data2)
+
+# Calculate the size in bytes of the decoded data
+decoded_data_size_ronaldo = sys.getsizeof(decoded_data)
+decoded_data_size_messi = sys.getsizeof(decoded_data2)
+
+# Calculate the compression ratio
+compression_ratio_ronaldo = original_image_size_ronaldo / encoded_data_size_ronaldo
+compression_ratio_messi = original_image_size_messi / encoded_data_size_messi
+
+# Create a list to hold both the original and compressed images
+images = [image_ronaldo, reconstructed_ronaldo, image_messi, reconstructed_messi]
+titles = ['Original', 'Decompressed', 'Original', 'Decompressed']
+
+# Create a 2x2 grid of subplots for displaying the images
+fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+
+# Iterate through subplots for displaying the images
+for i in range(4):
+    row = i // 2  # Determine the row
+    col = i % 2   # Determine the column
+    axes[row, col].imshow(images[i], cmap='gray', norm=Normalize(0, 255))
+    axes[row, col].set_title(titles[i])
+    axes[row, col].set_xticks([])
+    axes[row, col].set_yticks([])
+
+# Define a list of 16 text lines
+text_lines = [
+    (0.44, 0.85, 'Original size:'),
+    (0.44, 0.82, f"{original_image_size_ronaldo} bytes"),
+    (0.44, 0.77, 'Encoded size:'),
+    (0.44, 0.74, f"{encoded_data_size_ronaldo} bytes"),
+    (0.44, 0.69, 'Decoded size:'),
+    (0.44, 0.66, f"{decoded_data_size_ronaldo} bytes"),
+    (0.44, 0.61, "Compression ratio:"),
+    (0.44, 0.58, f"{compression_ratio_ronaldo:.2f}"),
+    (0.44, 0.42, 'Original size:'),
+    (0.44, 0.39, f"{original_image_size_messi} bytes"),
+    (0.44, 0.34, 'Encoded size:'),
+    (0.44, 0.31, f"{encoded_data_size_messi} bytes"),
+    (0.44, 0.26, 'Decoded size:'),
+    (0.44, 0.23, f"{decoded_data_size_messi} bytes"),
+    (0.44, 0.19, "Compression ratio:"),
+    (0.44, 0.16, f"{compression_ratio_messi:.2f}"),
+]
+
+# Add text lines to the entire plot
+for x, y, text in text_lines:
+    fig.text(x, y, text, fontsize=12, color='black')
+
+# Adjust the horizontal and vertical spacing between subplots
+plt.subplots_adjust(wspace=0.2, hspace=0.3)
+
+# Display the subplots
+plt.show()
