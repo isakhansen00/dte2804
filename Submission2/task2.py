@@ -1,26 +1,34 @@
-import numpy as np
-import scipy.fftpack
-import matplotlib.pyplot as plt
 import cv2
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib.colors import Normalize
+import matplotlib.cm as cm
 
-# Load your image
-# Define an 8x8 grayscale image
-image = np.array([
-    [52, 55, 61, 66, 70, 61, 64, 73],
-    [63, 59, 55, 90, 109, 85, 69, 72],
-    [62, 59, 68, 113, 144, 104, 66, 73],
-    [63, 58, 71, 122, 154, 106, 70, 69],
-    [67, 61, 68, 104, 126, 88, 68, 70],
-    [79, 65, 60, 70, 77, 68, 58, 75],
-    [85, 71, 64, 59, 55, 61, 65, 83],
-    [87, 79, 69, 68, 65, 76, 78, 94]
-], dtype=np.float32)
 
-# Step 1: Perform 2D DCT on the image
-dct_image = scipy.fftpack.dct(scipy.fftpack.dct(image, axis=0, norm='ortho'), axis=1, norm='ortho')
+# Function to calculate the Mean Absolute Difference (MAD) between two images
+def calculate_mad(image1, image2):
+    return np.mean(np.abs(image1 - image2))
 
-# Quantization matrices for the three scenarios
-# a) Normal Compression (High-frequency parts set to 0)
+
+# Load the image
+image = cv2.imread('sui.png', cv2.IMREAD_GRAYSCALE)
+
+# Define the block size
+B = 8
+def quantize(dct, quantize):
+    quantized_dct_matrix = np.round(dct / quantize)
+    return quantized_dct_matrix
+
+def dequantize_dct(dct_matrix, quantization_matrix):
+    # Reverse quantization by multiplying with the quantization matrix
+    decompressed_dct_matrix = np.multiply(dct_matrix, quantization_matrix)
+    
+    return decompressed_dct_matrix
+# Crop the image to ensure its dimensions are multiples of B
+height, width = image.shape
+new_height = (height // B) * B
+new_width = (width // B) * B
+cropped_image = image[:new_height, :new_width]
 quantization_matrix_a = np.array([
     [16, 11, 10, 16, 24, 40, 51, 61],
     [12, 12, 14, 19, 26, 58, 60, 55],
@@ -34,45 +42,64 @@ quantization_matrix_a = np.array([
 
 # b) Setting only low-frequency parts to 0
 quantization_matrix_b = np.array([
-    [128, 128, 128, 128, 128, 128, 128, 128],
-    [128, 128, 128, 128, 128, 128, 128, 128],
-    [128, 128, 128, 128, 128, 128, 128, 128],
-    [128, 128, 128, 128, 128, 128, 128, 128],
-    [128, 128, 128, 128, 128, 128, 128, 128],
-    [128, 128, 128, 128, 128, 128, 128, 128],
-    [128, 128, 128, 128, 128, 128, 128, 128],
-    [128, 128, 128, 128, 128, 128, 128, 128]
-])
+     [100, 100, 100, 90, 80, 20, 20, 20],
+     [100, 100, 100, 100, 100, 20, 100, 2],
+     [100, 100, 100, 90, 80, 80, 20, 40],
+     [100, 100, 100, 100, 80, 100, 100, 40],
+     [100, 100, 100, 100, 100, 100, 20, 10],
+     [70, 80, 100, 100, 100, 20, 2, 10],
+     [20, 100, 100, 100, 100, 100, 3, 2],
+     [2, 100, 100, 90, 70, 20, 2, 2]
+ ])
 
 # c) Setting high and low-frequency parts to 0 and keeping the rest
 quantization_matrix_c = np.array([
-    [16, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0]
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200],
+    [200, 200, 200, 200, 200, 200, 200, 200]
 ])
+# Initialize variables to store the transformed and reconstructed images
+Trans = np.zeros(cropped_image.shape, dtype=np.float32)
+back0_a = np.zeros(cropped_image.shape, dtype=np.float32)
+back0_b = np.zeros(cropped_image.shape, dtype=np.float32)
+back0_c = np.zeros(cropped_image.shape, dtype=np.float32)
 
-# Step 2: Apply quantization to the DCT coefficients
-quantized_image_a = np.round(dct_image / quantization_matrix_a)
-quantized_image_b = np.round(dct_image / quantization_matrix_b)
-quantized_image_c = np.round(dct_image / quantization_matrix_c)
+# Perform the DCT and IDCT block by block
+for y in range(0, new_height, B):
+    for x in range(0, new_width, B):
+        block = cropped_image[y:y + B, x:x + B]
+
+        # Apply DCT
+        dct_block = cv2.dct(np.float32(block))
+        Trans[y:y + B, x:x + B] = dct_block
+        quantized_a = quantize(dct_block, quantization_matrix_a)
+        quantized_b = quantize(dct_block, quantization_matrix_b)
+        quantized_c = quantize(dct_block, quantization_matrix_c)
+
+        dequantized_matrix_a = dequantize_dct(quantized_a, quantization_matrix_a)
+        dequantized_matrix_b = dequantize_dct(quantized_b, quantization_matrix_b)
+        dequantized_matrix_c = dequantize_dct(quantized_c, quantization_matrix_c)
+
+        # Apply IDCT
+        idct_block_a = cv2.idct(dequantized_matrix_a)
+        idct_block_b = cv2.idct(dequantized_matrix_b)
+        idct_block_c = cv2.idct(dequantized_matrix_c)
+        back0_a[y:y + B, x:x + B] = idct_block_a
+        back0_b[y:y + B, x:x + B] = idct_block_b
+        back0_c[y:y + B, x:x + B] = idct_block_c
 
 # Create a list to hold both the original and compressed images
 images = []
 
-# Step 3: Inverse DCT to obtain compressed images
-compressed_image_a = scipy.fftpack.idct(scipy.fftpack.idct(quantized_image_a, axis=0, norm='ortho'), axis=1, norm='ortho')
-compressed_image_b = scipy.fftpack.idct(scipy.fftpack.idct(quantized_image_b, axis=0, norm='ortho'), axis=1, norm='ortho')
-compressed_image_c = scipy.fftpack.idct(scipy.fftpack.idct(quantized_image_c, axis=0, norm='ortho'), axis=1, norm='ortho')
-
 images.append(image)
-images.append(compressed_image_a)
-images.append(compressed_image_b)
-images.append(compressed_image_c)
+images.append(back0_a)
+images.append(back0_b)
+images.append(back0_c)
 
 titles = ['Original', "A", "B", "C"]
 
@@ -81,7 +108,8 @@ fig, axes = plt.subplots(1, 4, figsize=(15, 5))
 
 # Iterate through subplots for displaying the images
 for i in range(4):
-    axes[i].imshow(images[i], 'gray')  # Display the image in grayscale
+    #axes[i].imshow(images[i], 'gray')  # Display the image in grayscale
+    axes[i].imshow(images[i], cmap='gray', norm=Normalize(0, 255))
     axes[i].set_title(titles[i])  # Set the title for the subplot
     axes[i].set_xticks([])  # Remove the numbers on the x-axis
     axes[i].set_yticks([])  # Remove the numbers on the y-axis
