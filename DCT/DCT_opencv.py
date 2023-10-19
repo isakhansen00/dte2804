@@ -11,17 +11,34 @@ def calculate_mad(image1, image2):
 
 
 # Load the image
-image = cv2.imread('lab/Part A_DCT_Fourier_wavelet/DCT/minions.jpg', cv2.IMREAD_GRAYSCALE)
+image = cv2.imread('sui.png', cv2.IMREAD_GRAYSCALE)
 
 # Define the block size
 B = 8
+def quantize(dct, quantize):
+    quantized_dct_matrix = np.round(dct / quantize)
+    return quantized_dct_matrix
 
+def dequantize_dct(dct_matrix, quantization_matrix):
+    # Reverse quantization by multiplying with the quantization matrix
+    decompressed_dct_matrix = np.multiply(dct_matrix, quantization_matrix)
+    
+    return decompressed_dct_matrix
 # Crop the image to ensure its dimensions are multiples of B
 height, width = image.shape
 new_height = (height // B) * B
 new_width = (width // B) * B
 cropped_image = image[:new_height, :new_width]
-
+quantization_matrix = np.array([
+     [200, 200, 200, 200, 200, 200, 200, 200],
+     [200, 200, 200, 200, 200, 200, 200, 200],
+     [200, 200, 200, 200, 200, 200, 200, 200],
+     [200, 200, 200, 200, 200, 200, 200, 200],
+     [200, 200, 200, 200, 200, 200, 200, 200],
+     [200, 200, 200, 200, 200, 200, 200, 200],
+     [200, 200, 200, 200, 200, 200, 200, 200],
+     [200, 200, 200, 200, 200, 200, 200, 200]
+ ])
 # Initialize variables to store the transformed and reconstructed images
 Trans = np.zeros(cropped_image.shape, dtype=np.float32)
 back0 = np.zeros(cropped_image.shape, dtype=np.float32)
@@ -34,9 +51,11 @@ for y in range(0, new_height, B):
         # Apply DCT
         dct_block = cv2.dct(np.float32(block))
         Trans[y:y + B, x:x + B] = dct_block
+        quantized = quantize(dct_block, quantization_matrix)
 
+        dequantized_matrix = dequantize_dct(quantized, quantization_matrix)
         # Apply IDCT
-        idct_block = cv2.idct(dct_block)
+        idct_block = cv2.idct(dequantized_matrix)
         back0[y:y + B, x:x + B] = idct_block
 
 # Save the transformed image
