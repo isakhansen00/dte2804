@@ -13,6 +13,7 @@ image_messi = cv2.imread('messi.jpeg', cv2.IMREAD_GRAYSCALE)
 
 # Define the block size
 B = 8
+
 def quantize(fft, quantize):
     quantized_fft_matrix = np.round(fft / quantize)
     return quantized_fft_matrix
