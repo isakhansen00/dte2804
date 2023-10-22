@@ -23,7 +23,7 @@ for keep_w in (0.1, 0.05, 0.01, 0.005):
 
     #Plot reconstruction
     Arecon = pywt.waverec2(coeffs_filt, wavelet=w)
-    #cv2.imwrite('compressed_sui.jpg', Arecon)
+    cv2.imwrite('compressed_sui.png', Arecon)
     plt.imshow(Arecon.astype('uint8'), cmap='gray')
     plt.title(keep_w)
     plt.show()

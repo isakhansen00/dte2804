@@ -16,7 +16,7 @@ LL, (LH, HL, HH) = coeffs2
 
 # Define meta information (for example, a watermark)
 meta_info = np.random.randint(0, 128, size=LL.shape)  # Ensure meta_info has the same dimensions as LL
-
+print(meta_info)
 
 
 
