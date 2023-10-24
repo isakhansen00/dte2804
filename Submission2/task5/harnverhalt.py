@@ -36,6 +36,7 @@ def combine_morphological_and_sift(image, morphological_result, keypoints):
     return result
 
 # Load the image series (harnverhalt1.jpg to harnverhalt14.jpg)
+
 image_series = [cv2.imread(os.path.join(image_dir, f'harnverhalt{i}.png'), cv2.IMREAD_COLOR) for i in range(1, 15)]
 
 # Create a menu to choose the operation
@@ -72,14 +73,29 @@ elif choice == 3:
     result_name = 'Combination of Morphological and SIFT'
 
 # Display the results
-if choice == 2:
-    plt.imshow(combined_image[:, :, ::-1])
-    plt.title(f'Combined {result_name} SIFT Results')
-    plt.axis('off')
-else:
-    average_result = np.mean(results, axis=0).astype(np.uint8)
-    plt.imshow(average_result, cmap='gray' if result_name == 'Morphological' else None)
-    plt.title(f'Average {result_name} Result')
-    plt.axis('off')
+fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
+original_image_series = [cv2.imread(os.path.join(image_dir, f'harnverhalt{i}.png'), cv2.IMREAD_COLOR) for i in range(1, 15)]
+# Show the first image (original) on the left
+ax[0].imshow(original_image_series[0][:, :, ::-1])
+ax[0].set_title('Original Image')
+ax[0].axis('off')
+
+if choice == 2:
+    # Display the combined SIFT result on the right
+    ax[1].imshow(combined_image[:, :, ::-1])
+    ax[1].set_title(f'Combined {result_name} SIFT Results')
+elif choice == 3:
+    # Display the combined result for Morphological and SIFT on the right
+    ax[1].imshow(results[0][:, :, ::-1])
+    ax[1].set_title(f'{result_name} Result for the First Image')
+else:
+    # Display the processed (average) image on the right
+    average_result = np.mean(results, axis=0).astype(np.uint8)
+    ax[1].imshow(average_result, cmap='gray' if result_name == 'Morphological' else None)
+    ax[1].set_title(f'Average {result_name} Result')
+
+ax[1].axis('off')
+
+plt.tight_layout()
 plt.show()
