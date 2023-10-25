@@ -3,6 +3,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+"""
+--- Oppgave 5 - SIFT + Morphological operations "Harnverhalt" ---
+Denne oppgaven gikk ut på å feature matche ved hjelp av SIFT og å i tillegg kunne gjøre morphologiske
+operasjoner på bildeserien vi har fått utlevert. dette for å tydeligere se etter features på bildet.
+Programmet fungerer slik:
+Man starter programmet og blir møtt med en "meny" hvor man kan trykke tast 1, 2 eller 3.
+om man trykker "1" får man mulighet til å utføre "closing" på bildet, dvs. dilation og erotion etter hverandre.
+dette gjennomføres på samtlige bilder i bildeserien, og man får et gjennomsnittsresultat etter loopen er kjørt
+
+om man trykker "2" får man en SIFT-analysert utgave av bildeserien.
+
+om man trykker "3" får man en kombinasjon av det morphologiske bildet og den sift analyserte utgaven som overlapper hverandre.
+
+--- REFLEKSJON ---
+I etterkant ville det være bedre med færre keypoints i SIFT analysen, da så mange punkter gjøre det betydelig vanskeligere å se
+hva som faktisk er relevant og ikke.
+"""
+
 image_dir = os.path.abspath(os.path.dirname(__file__))  # Assuming the script is in the same directory as the images
 
 # Function to detect ROIs using morphological operations
