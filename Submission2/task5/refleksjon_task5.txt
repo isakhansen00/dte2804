@@ -1,0 +1,31 @@
+Selvstendig bruk av morfologiske operasjoner:
+
+Morfologiske operasjoner som "Closing," "Erosion," og "Dilation" har vist seg å være nyttige verktøy innen medisinsk bildebehandling. 
+"Closing" kan bidra til å fjerne uønskede hull i strukturer og forbedre kantdeteksjon. "Erosion" kan brukes til å redusere støy i bildet ved å fjerne små strukturer,
+mens "Dilation" kan forsterke og utvide strukturer. Disse operasjonene har hver sin spesifikke rolle i å forbedre bildenes kvalitet og pålitelighet.
+
+Selvstendig bruk av SIFT:
+
+Skala-invariante funksjoner (SIFT) er et kraftig verktøy for å detektere og beskrive nøkkelpunkter i medisinske bilder. SIFT-algoritmen tillater nøyaktig registrering og sammenligning av strukturer, 
+selv med variasjoner i størrelse og rotasjon. Dette gjør det spesielt nyttig for gjenkjenning av anatomiske trekk og sammenligning av medisinske bilder over tid.
+
+Kombinasjonen av morfologiske operasjoner og SIFT:
+
+Sammenkobling av morfologiske operasjoner og SIFT kan være svært gunstig innen medisinsk forskning. Morfologiske operasjoner kan forbedre kvaliteten på bildene ved å redusere støy, 
+forbedre kontrast og eksponere strukturer tydeligere. Dette forberedende arbeidet kan bidra til å øke SIFT-algoritmens nøyaktighet ved å gi den klarere og mer pålitelige data å jobbe med.
+
+Ved å integrere SIFT etter morfologiske operasjoner, kan man oppnå mer presis gjenkjenning og matching av anatomiske trekk i medisinske bilder. 
+Dette kan være spesielt viktig i tilfeller der det er nødvendig å spore endringer over tid eller identifisere spesifikke regioner av interesse.
+
+Samlet sett er kombinasjonen av morfologiske operasjoner og SIFT et kraftig verktøysett for medisinsk bildeanalyse og forskning. Det muliggjør 
+forbedring av bildenes kvalitet og nøyaktig gjenkjenning av strukturer, noe som kan være avgjørende for diagnostikk og behandlingsplanlegging innen medisin.
+
+Refleksjon på hvordan koden kan forbedres for å oppnå større presisjon:
+
+Parameterinnstillinger: En viktig faktor for presisjonen er valg av parametere som terskelverdier, størrelsen på kernelen for morfologiske operasjoner, 
+og terskelverdien for SIFT-matching. Disse parametrene bør finjusteres basert på egenskapene til de medisinske bildene og strukturene som skal identifiseres. 
+En mer adaptiv tilnærming for parametervalg kan forbedre nøyaktigheten.
+
+Bilderegistrering: For nøyaktig bilderegistrering, spesielt i tilfeller med store anatomiske variasjoner, 
+kan en mer avansert registreringsmetode som elastisk deformasjon eller deformasjonsfelt brukes i tillegg til eller i stedet for enkle morfologiske operasjoner. 
+Dette vil tillate bedre tilpasning av bildene.
