@@ -13,7 +13,7 @@ coeffs = pywt.wavedec2(img, wavelet=w, level=n)
 coeff_arr, coeff_slices = pywt.coeffs_to_array(coeffs)
 Csort = np.sort(np.abs(coeff_arr.reshape(-1)))
 
-for keep_w in (0.1, 0.05, 0.01, 0.005):
+for keep_w in (0.1, 0.05, 0.01, 0.005, 0.004):
     thresh = Csort[int(np.floor((1-keep_w)*len(Csort)))]
     ind = np.abs(coeff_arr) > thresh
     Cfilt = coeff_arr * ind # Threshold small indices
