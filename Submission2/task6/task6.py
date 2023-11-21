@@ -29,6 +29,49 @@ def apply_algorithm():
             if cv2.waitKey(1000//60) & 0xFF == ord('q'):
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 break
+    
+    elif algorithm == "KCF Tracker":
+        tracker = cv2.TrackerKCF_create()
+        ret, frame = cap.read()
+        roi = cv2.selectROI(frame, False)
+        tracker.init(frame, roi)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            success, roi = tracker.update(frame)
+            # Draw the bounding box
+            if success:
+                (x, y, w, h) = tuple(map(int, roi))
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Tracking failed!", (100, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+            cv2.imshow('Video with ' + algorithm, frame)
+            # Break the loop if 'q' is pressed
+            if cv2.waitKey(1000//60) & 0xFF == ord('q'):
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                break
+    elif algorithm == "MIL Tracker":
+        tracker = cv2.TrackerMIL_create()
+        ret, frame = cap.read()
+        roi = cv2.selectROI(frame, False)
+        tracker.init(frame, roi)
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            success, roi = tracker.update(frame)
+            # Draw the bounding box
+            if success:
+                (x, y, w, h) = tuple(map(int, roi))
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            else:
+                cv2.putText(frame, "Tracking failed!", (100, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+            cv2.imshow('Video with ' + algorithm, frame)
+            # Break the loop if 'q' is pressed
+            if cv2.waitKey(1000//60) & 0xFF == ord('q'):
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                break
 
     while True:
         ret, frame = cap.read()
@@ -54,11 +97,6 @@ def apply_algorithm():
                     y2 = int(y0 - 1000 * (a))
                     cv2.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 1)  # Draw lines in red
         
-        elif algorithm == "Otsu Thresholding":
-            # Apply Otsu Thresholding
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            _, thresholded = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            frame = cv2.cvtColor(thresholded, cv2.COLOR_GRAY2BGR)
         
         elif algorithm == "SIFT":
             # Apply SIFT algorithm
@@ -92,8 +130,8 @@ root.title("Video Processing")
 root.geometry("300x100")
 # Dropdown menu to select the algorithm
 algorithm_choice = tk.StringVar()
-algorithm_choice.set("Hough Lines")  # Default algorithm
-algorithm_menu = ttk.Combobox(root, textvariable=algorithm_choice, values=["Hough Lines", "Otsu Thresholding", "SIFT", "ORB", "CSRT Tracker"])
+algorithm_choice.set("CSRT Tracker")  # Default algorithm
+algorithm_menu = ttk.Combobox(root, textvariable=algorithm_choice, values=["CSRT Tracker", "KCF Tracker", "MIL Tracker", "Hough Lines", "SIFT", "ORB", ])
 algorithm_menu.pack(pady=10)
 
 # Button to apply the selected algorithm
