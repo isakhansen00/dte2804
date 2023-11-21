@@ -26,7 +26,7 @@ def apply_algorithm():
                 cv2.putText(frame, "Tracking failed!", (100, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
             cv2.imshow('Video with ' + algorithm, frame)
             # Break the loop if 'q' is pressed
-            if cv2.waitKey(1000//60) & 0xFF == ord('q'):
+            if cv2.waitKey(1000//30) & 0xFF == ord('q'):
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 break
     
@@ -48,7 +48,7 @@ def apply_algorithm():
                 cv2.putText(frame, "Tracking failed!", (100, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
             cv2.imshow('Video with ' + algorithm, frame)
             # Break the loop if 'q' is pressed
-            if cv2.waitKey(1000//60) & 0xFF == ord('q'):
+            if cv2.waitKey(1000//30) & 0xFF == ord('q'):
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 break
     elif algorithm == "MIL Tracker":
@@ -69,7 +69,7 @@ def apply_algorithm():
                 cv2.putText(frame, "Tracking failed!", (100, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
             cv2.imshow('Video with ' + algorithm, frame)
             # Break the loop if 'q' is pressed
-            if cv2.waitKey(1000//60) & 0xFF == ord('q'):
+            if cv2.waitKey(1000//30) & 0xFF == ord('q'):
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 break
 
